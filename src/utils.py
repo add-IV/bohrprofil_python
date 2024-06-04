@@ -1,6 +1,7 @@
 from glob import glob
 from os import path
 
+basedir = path.dirname(__file__)
 
 DPI = 300
 PIXEL_PER_MM = DPI / 25.4
@@ -12,7 +13,7 @@ def get_pixels_per_cm(cm: float):
 
 def get_textures():
     textures = []
-    for file in glob("patterns/*.png"):
+    for file in glob("*.png", root_dir=path.join(basedir, "..", "patterns")):
         textures.append(path.basename(file)[:-4])
     textures.sort()
     textures.sort(key=len)

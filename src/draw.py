@@ -1,9 +1,13 @@
 from tkinter import *
 from PIL import Image, ImageTk
+from os import path
 
 from .bohrprofil import Bohrprofil, Layer
 
 from .utils import get_pixels_per_cm
+
+
+basedir = path.dirname(__file__)
 
 images = []
 
@@ -33,7 +37,7 @@ def _draw_textures(c: Canvas, layers: list[Layer]):
     for layer in layers:
         y = get_pixels_per_cm(layer.end_depth + 1)
         texture = layer.texture
-        img = Image.open(f"patterns\\{texture}.png")
+        img = Image.open(path.join(basedir, "..", "patterns", f"{texture}.png"))
         aspect_ratio = img.width / img.height
         img = img.resize((64, int(64 / aspect_ratio)))
         img = _custom_resize(img, int(y - start_y) + 1)
