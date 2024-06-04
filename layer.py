@@ -33,4 +33,5 @@ class Layer:
 
     def combobox_set_textures(self):
         self.texture_combobox["values"] = get_textures()
-        self.texture_combobox.current(0)
+        if len(self.texture_combobox["values"]) > 0:
+            self.texture_combobox.current(0)

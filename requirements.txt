@@ -4,11 +4,27 @@
 #
 #    pip-compile
 #
+altgraph==0.17.4
+    # via pyinstaller
 customtkinter==5.2.2
     # via -r requirements.in
 darkdetect==0.8.0
     # via customtkinter
 packaging==24.0
-    # via customtkinter
+    # via
+    #   customtkinter
+    #   pyinstaller
+    #   pyinstaller-hooks-contrib
+pefile==2023.2.7
+    # via pyinstaller
 pillow==10.3.0
     # via -r requirements.in
+pyinstaller==6.7.0
+    # via -r requirements.in
+pyinstaller-hooks-contrib==2024.6
+    # via pyinstaller
+pywin32-ctypes==0.2.2
+    # via pyinstaller
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

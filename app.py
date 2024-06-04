@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import ttk
-
+from os import path
 from main_frame import MainFrame
 from utils import get_pixels_per_cm
+
+basedir = path.dirname(__file__)
 
 layers = []
 
@@ -17,5 +19,6 @@ root.rowconfigure(0, weight=1)
 # Create a main frame
 main_frame = MainFrame(root)
 
+root.iconbitmap(path.join(basedir, "mu.ico"))
 
 root.mainloop()
