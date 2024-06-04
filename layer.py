@@ -19,7 +19,7 @@ class Layer:
 
         self.description_text = Text(master, width=40, height=4)
         self.description_text.grid(row=rownumber, column=2, sticky=(N, W))
-        self.description_text.bind("<FocusOut>", change_callback)
+        self.description_text.bind("<KeyRelease>", change_callback)
     
     def set_all(self, end_depth, description):
         self.end_depth.set(end_depth)
