@@ -1,9 +1,9 @@
 from tkinter import *
 from PIL import Image, ImageTk
 
-from bohrprofil import Bohrprofil, Layer
+from .bohrprofil import Bohrprofil, Layer
 
-from src.utils import get_pixels_per_cm
+from .utils import get_pixels_per_cm
 
 images = []
 

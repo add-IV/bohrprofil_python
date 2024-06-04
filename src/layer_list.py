@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-from layer import Layer
+from .layer import Layer
 
 
 class LayerList(ttk.Frame):

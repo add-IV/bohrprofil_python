@@ -1,11 +1,11 @@
 from tkinter import *
 from tkinter import ttk
 
-from layer_list import LayerList
+from .layer_list import LayerList
 
-from draw import draw_profile
-from bohrprofil import Bohrprofil, Layer
-from src.utils import get_pixels_per_cm
+from .draw import draw_profile
+from .bohrprofil import Bohrprofil, Layer
+from .utils import get_pixels_per_cm
 
 
 class MainFrame(ttk.Frame):
