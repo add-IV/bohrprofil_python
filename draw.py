@@ -1,10 +1,11 @@
 from tkinter import *
-
+from PIL import Image, ImageTk
 
 from bohrprofil import Bohrprofil, Layer
 
 from utils import get_pixels_per_cm
 
+images = []
 
 def _create_scale(c: Canvas, max_depth: float):
     for i in range(int(max_depth) + 1):
@@ -18,8 +19,31 @@ def _create_scale(c: Canvas, max_depth: float):
         c.create_line(80, y, 240, y, fill="black", width=3)
 
 
-def _draw_textures():
-    pass
+def _custom_resize(img: Image, height: int) -> Image:
+    # repeats the image until the height is reached
+    img_height = img.height
+    img_width = img.width
+    new_img = Image.new("RGB", (img_width, height))
+    for y in range(0, height, img_height):
+        new_img.paste(img, (0, y))
+    return new_img
+
+
+def _draw_textures(c: Canvas, layers = list[Layer]):
+    start_y = get_pixels_per_cm(1)
+    global images
+    images = []
+    for layer in layers:
+        y = get_pixels_per_cm(layer.end_depth+1)
+        texture = layer.texture
+        img = Image.open(f"patterns\\{texture}.png")
+        aspect_ratio = img.width / img.height
+        img = img.resize((64, int(64 / aspect_ratio)))
+        img = _custom_resize(img, int(y - start_y))
+        img = ImageTk.PhotoImage(img)
+        images.append(img)
+        c.create_image(400, start_y, image=img, anchor="nw")
+        start_y = y
 
 
 def _create_horizontal_lines(c: Canvas, max_depth: float):
@@ -52,4 +76,5 @@ def draw_profile(c: Canvas, bp: Bohrprofil):
         background="white",
     )
     _create_scale(c, bp.max_depth)
+    _draw_textures(c, bp.layers)
     _create_horizontal_lines(c, bp.max_depth)

@@ -23,7 +23,7 @@ class LayerList(ttk.Frame):
     def add_one_layer(self):
         layer = Layer(self, len(self.layers) + 1, self.change_callback)
         self.layers.append(layer)
-        layer.set_all(f"{len(self.layers)}", "Sand", "This is a layer")
+        layer.set_all(f"{len(self.layers)}", "This is a layer")
 
     def remove_one_layer(self):
         if len(self.layers) > 1:
