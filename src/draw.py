@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 
 from bohrprofil import Bohrprofil, Layer
 
-from utils import get_pixels_per_cm
+from src.utils import get_pixels_per_cm
 
 images = []
 

@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from os import path
 from main_frame import MainFrame
-from utils import get_pixels_per_cm
+from src.utils import get_pixels_per_cm
 
 basedir = path.dirname(__file__)
 

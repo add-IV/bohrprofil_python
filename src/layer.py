@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-from utils import get_textures
+from src.utils import get_textures
 
 class Layer:
     def __init__(self, master, rownumber, change_callback=None):

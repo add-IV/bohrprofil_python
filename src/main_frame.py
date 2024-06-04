@@ -5,7 +5,7 @@ from layer_list import LayerList
 
 from draw import draw_profile
 from bohrprofil import Bohrprofil, Layer
-from utils import get_pixels_per_cm
+from src.utils import get_pixels_per_cm
 
 
 class MainFrame(ttk.Frame):
