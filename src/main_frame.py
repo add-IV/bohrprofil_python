@@ -1,6 +1,10 @@
 from tkinter import *
 from tkinter import ttk
 
+from PIL import Image
+
+from io import BytesIO
+
 from .layer_list import LayerList
 
 from .draw import draw_profile
@@ -101,4 +105,7 @@ class MainFrame(ttk.Frame):
         draw_profile(self.canvas, bohrprofil, self.canvas_frame.winfo_height())
 
     def save(self):
-        pass
+        ps = self.canvas.postscript(colormode="color")
+        img = Image.open(BytesIO(ps.encode("ascii")))
+        img.load(scale=300/72.)
+        img.save("bohrprofil.png")
