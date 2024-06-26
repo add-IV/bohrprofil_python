@@ -130,7 +130,12 @@ def draw_profile(c: Canvas, bp: Bohrprofil, max_height: int = 800):
         width=get_pixels_per_cm(7),
         height=max_height,
         background="white",
-        scrollregion=(0, 0, get_pixels_per_cm(7), get_pixels_per_cm(bp.max_depth + 3)),
+        scrollregion=(
+            0,
+            0,
+            int(get_pixels_per_cm(7)),
+            int(get_pixels_per_cm(bp.max_depth + 3)),
+        ),
     )
     _create_scale(c, bp.max_depth)
     _draw_textures(c, bp.layers)
@@ -139,3 +144,20 @@ def draw_profile(c: Canvas, bp: Bohrprofil, max_height: int = 800):
     description_lines = _create_descriptions(c, bp.layers)
     _create_switch_lines(c, bp.layers, description_lines)
     _create_height(c, bp.height)
+
+
+if __name__ == "__main__":
+    root = Tk()
+    root.title("Bohrprofil")
+    root.minsize(1400, 800)
+    root.geometry("1400x800")
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    frame = Frame(root)
+    frame.grid(row=0, column=0, sticky=(N, W, E, S))
+    canvas = Canvas(frame, width=get_pixels_per_cm(7), height=800, background="white")
+    canvas.grid(row=0, column=0, sticky=(N, W, E, S))
+    with open("bohrprofil.txt", "r") as file:
+        bp = Bohrprofil.unmarshal(eval(file.read()))
+    draw_profile(canvas, bp)
+    root.mainloop()
