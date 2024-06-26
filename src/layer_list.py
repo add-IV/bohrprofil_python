@@ -2,29 +2,30 @@ from tkinter import *
 from tkinter import ttk
 
 from .layer import Layer
+from .vertical_scrolled_frame import VerticalScrolledFrame
 
 
-class LayerList(ttk.Frame):
-    def __init__(self, master, change_callback=None):
-        super().__init__(master)
+class LayerList(VerticalScrolledFrame):
+    def __init__(self, parent, change_callback=None):
+        super().__init__(parent)
         self.layers = []
         self.change_callback = change_callback
 
-        self.end_depth_label = ttk.Label(self, text="End depth")
+        self.end_depth_label = ttk.Label(self.interior, text="End depth")
         self.end_depth_label.grid(row=0, column=0, sticky=(N, W))
 
-        self.texture_label = ttk.Label(self, text="Texture")
+        self.texture_label = ttk.Label(self.interior, text="Texture")
         self.texture_label.grid(row=0, column=1, sticky=(N, W))
 
-        self.description_label = ttk.Label(self, text="Description")
+        self.description_label = ttk.Label(self.interior, text="Description")
         self.description_label.grid(row=0, column=2, sticky=(N, W))
 
         self.add_one_layer(False)
 
     def add_one_layer(self, do_callback=True):
-        layer = Layer(self, len(self.layers) + 1, self.change_callback)
+        layer = Layer(self.interior, len(self.layers) + 1, self.change_callback)
         self.layers.append(layer)
-        layer.set_all(f"{len(self.layers)}", "This is a layer")
+        layer.set_all(f"{len(self.layers)}", "")
         if do_callback:
             self.change_callback()
 

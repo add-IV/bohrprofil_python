@@ -1,9 +1,8 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter.filedialog import asksaveasfilename
 
-from PIL import Image
-
-from io import BytesIO
+from PIL import ImageTk
 
 from .layer_list import LayerList
 
@@ -99,13 +98,29 @@ class MainFrame(ttk.Frame):
                     layer.description_text.get(1.0, END),
                 )
             )
-        bohrprofil = Bohrprofil(self.title_name.get(), self.height_name.get(), 100, layers)
-        bohrprofil.sort_layers()
-        bohrprofil.update_max_depth()
-        draw_profile(self.canvas, bohrprofil, self.canvas_frame.winfo_height())
+        self.bohrprofil = Bohrprofil(self.title_name.get(), self.height_name.get(), 100, layers)
+        self.bohrprofil.sort_layers()
+        self.bohrprofil.update_max_depth()
+        self.canvas.delete("all")
+        self.canvas.config(
+            width=get_pixels_per_cm(7),
+            height=self.canvas_frame.winfo_height(),
+            background="white",
+            scrollregion=(
+                0,
+                0,
+                int(get_pixels_per_cm(7)),
+                int(get_pixels_per_cm(self.bohrprofil.max_depth + 2)),
+            ),
+        )
+        self.image = draw_profile(self.bohrprofil)
+        self.photo = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, anchor=NW, image=self.photo)
 
     def save(self):
-        ps = self.canvas.postscript(colormode="color")
-        img = Image.open(BytesIO(ps.encode("ascii")))
-        img.load(scale=300/72.)
-        img.save("bohrprofil.png")
+        filename = asksaveasfilename(
+            defaultextension=".png",
+            filetypes=[("PNG files", "*.png"), ("All files", "*")],
+        )
+        if filename:
+            self.image.save(filename)
