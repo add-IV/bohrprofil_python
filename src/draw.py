@@ -1,6 +1,6 @@
 from tkinter import *
 from PIL import Image, ImageDraw, ImageFont
-from os import getcwd, path
+from os import path
 
 from .bohrprofil import Bohrprofil, Layer
 from .config import Config
@@ -14,7 +14,7 @@ def _get_bounds_xy(draw: ImageDraw, font: ImageFont, text: str) -> tuple[int, in
 
 
 class BohrprofilDrawer:
-    basedir = getcwd()
+    basedir = path.dirname(__file__)
 
     def _create_scale(self, max_depth: float):
         for i in range(int(max_depth) + 1):
@@ -57,7 +57,9 @@ class BohrprofilDrawer:
         for layer in layers:
             y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
             texture = layer.texture
-            img = Image.open(path.join(self.basedir, "patterns", f"{texture}.png"))
+            img = Image.open(
+                path.join(self.basedir, "..", "patterns", f"{texture}.png")
+            )
             aspect_ratio = img.width / img.height
             img = img.resize((image_width, int(image_width / aspect_ratio)))
             img = self._custom_resize(img, int(y - start_y) + 1)
@@ -180,7 +182,8 @@ class BohrprofilDrawer:
         )
         self.draw = ImageDraw.Draw(self.image)
         self.draw.font = ImageFont.truetype(
-            "DejaVuSans.ttf", self.config.get("Schriften", "Schriftgröße")
+            path.join(self.basedir, "..", "DejaVuSans.ttf"),
+            self.config.get("Schriften", "Schriftgröße"),
         )
 
     def draw_profile(self, bp: Bohrprofil, config: Config) -> Image:

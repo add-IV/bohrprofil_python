@@ -1,7 +1,9 @@
 from configparser import ConfigParser
-import os
+from os import path
 
 from .utils import get_pixels_per_cm
+
+basedir = path.dirname(__file__)
 
 
 class Config:
@@ -9,7 +11,7 @@ class Config:
         self.parser = ConfigParser()
         self.parser.optionxform = str
         self.read_default_config()
-        self.read_file("config.ini")
+        self.read_file(path.join(basedir, "..", "config.ini"))
 
     def get(self, section, key):
         value = self.parser.get(section, key)
@@ -72,7 +74,7 @@ class Config:
             self.parser.write(file)
 
     def save(self):
-        self.write_file("config.ini")
+        self.write_file(path.join(basedir, "..", "config.ini"))
 
     def read_default_config(self):
         self.parser.read_string(
