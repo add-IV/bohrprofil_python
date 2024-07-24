@@ -86,7 +86,8 @@ class BohrprofilDrawer:
             fill=self.line_color,
             width=self.config.get("Linien", "Profil Linienstärke"),
         )
-        font = self.draw.getfont().font_variant(size=15)
+        size = self.config.get("Schriften", "Schichtentiefe Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
         for i in range(len(layers)):
             text = f"{(layers[i].end_depth):.2f} m"
             boundsxy = _get_bounds_xy(self.draw, font, text)
@@ -135,7 +136,8 @@ class BohrprofilDrawer:
 
     def _create_descriptions(self, layers: list[Layer]) -> list[float]:
         description_lines = []
-        font = self.draw.getfont().font_variant(size=15)
+        size = self.config.get("Schriften", "Beschreibung Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
         current_y = get_pixels_per_cm(1)
         y_border = self.config.get("Schriften Abstände", "Beschreibung Y Abstand")
         for layer in layers:
@@ -158,7 +160,8 @@ class BohrprofilDrawer:
         return description_lines
 
     def _create_height(self, height: float):
-        font = self.draw.getfont().font_variant(size=12)
+        size = self.config.get("Schriften", "Meereshöhe Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
         text = f"Meereshöhe: {height} m"
         boundsxy = _get_bounds_xy(self.draw, font, text)
         self.draw.text(

@@ -61,7 +61,7 @@ class ConfigFrame(ttk.Frame):
 
         self.current_row += 1
 
-        entry.bind("<FocusOut>", lambda e: self.set_value(section, key, entry.get()))
+        entry.bind("<KeyRelease>", lambda e: self.set_value(section, key, entry.get()))
 
     def set_value(self, section, key, value):
         self.config.set(section, key, value)

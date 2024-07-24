@@ -12,10 +12,9 @@ class Layer:
             master,
             textvariable=self.end_depth,
             width=10,
-            validate="focusout",
-            validatecommand=change_callback,
         )
         self.end_depth_entry.grid(row=rownumber, column=0, sticky=(N, W))
+        self.end_depth_entry.bind("<KeyRelease>", change_callback)
 
         self.texture = StringVar()
         self.texture_combobox = ttk.Combobox(master, textvariable=self.texture)
