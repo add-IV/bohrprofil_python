@@ -1,14 +1,17 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter.filedialog import asksaveasfilename
 
 from .config import Config
 
+
 class ConfigFrame(ttk.Frame):
-    def __init__(self, master, config: Config, updatecallback: callable):
+    def __init__(
+        self, master, config: Config, updatecallback: callable, resetcallback: callable
+    ):
         super().__init__(master)
         self.config = config
         self.update = updatecallback
+        self.reset_frame = resetcallback
 
         self.grid(row=0, column=1, sticky=(N, W, E, S), padx=8, pady=4)
 
@@ -32,10 +35,7 @@ class ConfigFrame(ttk.Frame):
         self.save_button.grid(row=self.current_row, column=1, sticky=(N, W))
 
     def save(self):
-        filename = asksaveasfilename(
-            filetypes=[("Config files", "*.ini")], defaultextension=".ini"
-        )
-        self.config.write_file(filename)
+        self.config.save()
 
     def create_section_title(self, title: str):
         label = ttk.Label(self, text=title)
@@ -62,7 +62,7 @@ class ConfigFrame(ttk.Frame):
         self.current_row += 1
 
         entry.bind("<FocusOut>", lambda e: self.set_value(section, key, entry.get()))
-    
+
     def set_value(self, section, key, value):
         self.config.set(section, key, value)
         self.update()
@@ -70,3 +70,4 @@ class ConfigFrame(ttk.Frame):
     def reset(self):
         self.config.read_default_config()
         self.update()
+        self.reset_frame()

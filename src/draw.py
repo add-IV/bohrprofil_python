@@ -19,20 +19,27 @@ class BohrprofilDrawer:
     def _create_scale(self, max_depth: float):
         for i in range(int(max_depth) + 1):
             text = f"{i}.00 m"
-            y = get_pixels_per_cm(i) + self.config.first_distance()
-            font = self.draw.getfont().font_variant(size=25)
-            start_x = self.config.get("Abstände und Längen", "Links Abstand")
-            endx = self.config.get(
-                "Abstände und Längen", "Links Abstand"
-            ) + self.config.get("Abstände und Längen", "Maßstab Länge")
+            y = get_pixels_per_cm(i) + self.config.y1()
+            size = self.config.get("Schriften", "Maßstab Schriftgröße")
+            font = self.draw.getfont().font_variant(size=size)
+            start_x = self.config.x1()
+            endx = self.config.x2()
             boundsxy = _get_bounds_xy(self.draw, font, text)
             self.draw.text(
-                (endx - boundsxy[0] - 5, y - boundsxy[1]),
+                (
+                    endx
+                    - boundsxy[0]
+                    + self.config.get("Schriften Abstände", "Maßstab X Abstand"),
+                    y
+                    - boundsxy[1]
+                    + self.config.get("Schriften Abstände", "Maßstab Y Abstand"),
+                ),
                 text,
-                fill="black",
+                fill=self.font_color,
                 font=font,
             )
-            self.draw.line((start_x, y, endx, y), fill="black", width=3)
+            width = self.config.get("Linien", "Maßstab Linienstärke")
+            self.draw.line((start_x, y, endx, y), fill=self.line_color, width=width)
 
     def _custom_resize(self, img: Image, height: int) -> Image:
         # repeats the image until the height is reached
@@ -44,16 +51,11 @@ class BohrprofilDrawer:
         return new_img
 
     def _draw_textures(self, layers: list[Layer]):
-        start_y = get_pixels_per_cm(1)
+        start_y = self.config.y1()
         image_width = self.config.get("Abstände und Längen", "Symbole Länge")
-        start_x = (
-            self.config.get("Abstände und Längen", "Links Abstand")
-            + self.config.get("Abstände und Längen", "Maßstab Länge")
-            + self.config.get("Abstände und Längen", "Mitte Abstand")
-            + self.config.get("Abstände und Längen", "Schichtentiefe Länge")
-        )
+        start_x = self.config.x4()
         for layer in layers:
-            y = get_pixels_per_cm(layer.end_depth + 1)
+            y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
             texture = layer.texture
             img = Image.open(path.join(self.basedir, "patterns", f"{texture}.png"))
             aspect_ratio = img.width / img.height
@@ -63,62 +65,69 @@ class BohrprofilDrawer:
             start_y = y
 
     def _create_horizontal_lines(self, max_depth: float):
-        start_x = (
-            self.config.get("Abstände und Längen", "Links Abstand")
-            + self.config.get("Abstände und Längen", "Maßstab Länge")
-            + self.config.get("Abstände und Längen", "Mitte Abstand")
-            + self.config.get("Abstände und Längen", "Schichtentiefe Länge")
-        )
-        end_x = start_x + self.config.get("Abstände und Längen", "Symbole Länge")
+        start_x = self.config.x4()
+        end_x = self.config.x5()
         self.draw.rectangle(
             (
                 start_x,
-                self.config.first_distance(),
+                self.config.y1(),
                 end_x,
-                get_pixels_per_cm(max_depth) + self.config.first_distance(),
+                get_pixels_per_cm(max_depth) + self.config.y1(),
             ),
-            outline="black",
-            width=1,
+            outline=self.line_color,
+            width=self.config.get("Linien", "Profil Linienstärke"),
         )
 
     def _create_switch_lines(self, layers: list[Layer], description_lines: list[float]):
         self.draw.line(
-            (320, get_pixels_per_cm(1), 740, get_pixels_per_cm(1)),
-            fill="black",
-            width=1,
+            (self.config.x3(), self.config.y1(), self.config.x7(), self.config.y1()),
+            fill=self.line_color,
+            width=self.config.get("Linien", "Profil Linienstärke"),
         )
         font = self.draw.getfont().font_variant(size=15)
-        for i, layer in enumerate(layers):
+        for i in range(len(layers)):
             text = f"{(layers[i].end_depth):.2f} m"
             boundsxy = _get_bounds_xy(self.draw, font, text)
             self.draw.text(
-                (320 + 5, get_pixels_per_cm(layers[i].end_depth + 1) - boundsxy[1]),
+                (
+                    self.config.x3()
+                    + self.config.get("Schriften Abstände", "Schichtentiefe X Abstand"),
+                    get_pixels_per_cm(layers[i].end_depth)
+                    + self.config.y1()
+                    - boundsxy[1]
+                    + self.config.get("Schriften Abstände", "Schichtentiefe Y Abstand"),
+                ),
                 text,
                 font=font,
-                fill="black",
+                fill=self.font_color,
             )
             self.draw.line(
                 [
-                    320,
-                    get_pixels_per_cm(layers[i].end_depth + 1),
-                    500,
-                    get_pixels_per_cm(layers[i].end_depth + 1),
-                    540,
+                    self.config.x3(),
+                    get_pixels_per_cm(layers[i].end_depth) + self.config.y1(),
+                    self.config.x5(),
+                    get_pixels_per_cm(layers[i].end_depth) + self.config.y1(),
+                    self.config.x6(),
                     description_lines[i],
-                    740,
+                    self.config.x7(),
                     description_lines[i],
                 ],
-                fill="black",
-                width=1,
+                fill=self.line_color,
+                width=self.config.get("Linien", "Profil Linienstärke"),
             )
 
     def _create_title(self, title: str):
         font = self.draw.getfont().font_variant(size=35)
         boundsxy = _get_bounds_xy(self.draw, font, title)
         self.draw.text(
-            (400 - boundsxy[0] // 2, 10),
+            (
+                self.config.get_width() // 2
+                - boundsxy[0] // 2
+                + self.config.get("Schriften Abstände", "Titel Offset"),
+                self.config.get("Schriften Abstände", "Titel Abstand"),
+            ),
             title,
-            fill="black",
+            fill=self.font_color,
             font=font,
         )
 
@@ -126,18 +135,23 @@ class BohrprofilDrawer:
         description_lines = []
         font = self.draw.getfont().font_variant(size=15)
         current_y = get_pixels_per_cm(1)
+        y_border = self.config.get("Schriften Abstände", "Beschreibung Y Abstand")
         for layer in layers:
-            current_y += 5
+            current_y += y_border
             boundsxy = _get_bounds_xy(self.draw, font, layer.description)
             self.draw.text(
-                (550, current_y),
+                (
+                    self.config.x6()
+                    + self.config.get("Schriften Abstände", "Beschreibung X Abstand"),
+                    current_y,
+                ),
                 layer.description,
-                fill="black",
+                fill=self.font_color,
                 font=font,
             )
-            current_y += boundsxy[1] + 5
-            if current_y < get_pixels_per_cm(layer.end_depth + 1):
-                current_y = get_pixels_per_cm(layer.end_depth + 1)
+            current_y += boundsxy[1] + y_border
+            if current_y < get_pixels_per_cm(layer.end_depth) + self.config.y1():
+                current_y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
             description_lines.append(current_y)
         return description_lines
 
@@ -146,9 +160,15 @@ class BohrprofilDrawer:
         text = f"Meereshöhe: {height} m"
         boundsxy = _get_bounds_xy(self.draw, font, text)
         self.draw.text(
-            (320 + 5, get_pixels_per_cm(1) - boundsxy[1] - 5),
+            (
+                self.config.x3()
+                + self.config.get("Schriften Abstände", "Meereshöhe X Abstand"),
+                self.config.y1()
+                - boundsxy[1]
+                + self.config.get("Schriften Abstände", "Meereshöhe Y Abstand"),
+            ),
             text,
-            fill="black",
+            fill=self.font_color,
             font=font,
         )
 
@@ -156,17 +176,22 @@ class BohrprofilDrawer:
         self.image = Image.new(
             "RGB",
             (width, height),
-            (255, 255, 255),
+            color=self.background_color,
         )
         self.draw = ImageDraw.Draw(self.image)
-        self.draw.font = ImageFont.truetype("DejaVuSans.ttf", 15)
+        self.draw.font = ImageFont.truetype(
+            "DejaVuSans.ttf", self.config.get("Schriften", "Schriftgröße")
+        )
 
     def draw_profile(self, bp: Bohrprofil, config: Config) -> Image:
+        self.config = config
+        self.background_color = config.get_section("Farben")["Hintergrundfarbe"]
+        self.line_color = config.get_section("Farben")["Linienfarbe"]
+        self.font_color = config.get_section("Farben")["Schriftfarbe"]
         self._new_image(
             config.get_width(),
             int(get_pixels_per_cm(bp.max_depth) + config.get_extra_height()),
         )
-        self.config = config
         self._create_scale(bp.max_depth)
         self._draw_textures(bp.layers)
         self._create_horizontal_lines(bp.max_depth)

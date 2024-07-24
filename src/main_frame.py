@@ -40,23 +40,15 @@ class MainFrame(ttk.Frame):
         self.height_entry.grid(row=1, column=1, sticky=(N, W))
         self.height_name.set("375")
 
-        self.layer_manipulation_frame = ttk.Frame(self)
-        self.layer_manipulation_frame.grid(row=1, column=0, sticky=(N, W))
-
         self.add_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Schicht hinzufügen"
+            self.info_frame, text="Schicht hinzufügen"
         )
-        self.add_layer_button.grid(row=0, column=0, sticky=(N, W))
+        self.add_layer_button.grid(row=2, column=0, sticky=(N, W))
 
         self.remove_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Schicht entfernen"
+            self.info_frame, text="Schicht entfernen"
         )
-        self.remove_layer_button.grid(row=0, column=1, sticky=(N, W))
-
-        self.sort_layers_button = ttk.Button(
-            self.layer_manipulation_frame, text="Schichten sortieren"
-        )
-        self.sort_layers_button.grid(row=0, column=2, sticky=(N, W))
+        self.remove_layer_button.grid(row=2, column=1, sticky=(N, W))
 
         self.layer_list = LayerList(self, self.update)
         self.layer_list.grid(row=2, column=0, sticky=(N, W, E, S))
@@ -78,23 +70,26 @@ class MainFrame(ttk.Frame):
         self.scrollbar.grid(row=0, column=2, sticky=(N, S))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
 
+        self.options_button = ttk.Button(self, text="Konfigurieren")
+        self.options_button.grid(row=3, column=0, sticky=(N, W))
+        
         self.save_button = ttk.Button(self, text="Speichern")
         self.save_button.grid(row=3, column=2, sticky=(N, E))
 
         self.rowconfigure(2, weight=1)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
         self.add_layer_button["command"] = self.layer_list.add_one_layer
         self.remove_layer_button["command"] = self.layer_list.remove_one_layer
-        self.sort_layers_button["command"] = self.layer_list.sort_layers
         self.save_button["command"] = self.save
+        self.options_button["command"] = self.open_config_toplevel
         self.title_entry.bind("<KeyRelease>", self.update)
         self.height_entry.bind("<KeyRelease>", self.update)
 
         self.after(100, self.update)
-        self.after(100, self.open_config_toplevel)
 
     def update(self, event=None):
+        self.layer_list.sort_layers()
         layers = []
         for layer in self.layer_list.layers:
             layers.append(
@@ -110,16 +105,19 @@ class MainFrame(ttk.Frame):
         self.bohrprofil.sort_layers()
         self.bohrprofil.update_max_depth()
         self.canvas.delete("all")
+        height = (
+            int(get_pixels_per_cm(self.bohrprofil.max_depth))
+            + self.config.get_extra_height()
+        )
         self.canvas.config(
             width=self.config.get_width(),
-            height=self.canvas_frame.winfo_height(),
+            height=min(self.canvas_frame.winfo_height(), height),
             background="white",
             scrollregion=(
                 0,
                 0,
                 self.config.get_width(),
-                int(get_pixels_per_cm(self.bohrprofil.max_depth))
-                + self.config.get_extra_height(),
+                height,
             ),
         )
         self.image = self.drawer.draw_profile(self.bohrprofil, self.config)
@@ -146,7 +144,11 @@ class MainFrame(ttk.Frame):
         self.config_toplevel.columnconfigure(0, weight=1)
         self.config_toplevel.rowconfigure(0, weight=1)
         self.config_frame = ConfigFrame(
-            self.config_toplevel, self.config, self.update_config
+            self.config_toplevel, self.config, self.update_config, self.reset_config
         )
         self.config_toplevel.transient(self)
         self.config_toplevel.wait_window(self.config_toplevel)
+
+    def reset_config(self):
+        self.config_toplevel.destroy()
+        self.open_config_toplevel()
