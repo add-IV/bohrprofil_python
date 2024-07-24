@@ -2,10 +2,15 @@
 
 
 a = Analysis(
-    ['app.py'],
+    ["app.py"],
     pathex=[],
     binaries=[],
-    datas=[('mu.ico', '.'), ('patterns', 'patterns'), ('DejaVuSans.ttf', '.'), ('config.ini', '.')],
+    datas=[
+        ("mu.ico", "."),
+        ("patterns", "patterns"),
+        ("DejaVuSans.ttf", "."),
+        ("config.ini", "."),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -21,13 +26,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Bohrprofil',
+    name="Bohrprofil",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,
-    icon='mu.ico',
+    icon="mu.ico",
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -41,5 +46,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='app',
+    name="app",
 )

@@ -4,6 +4,17 @@ from os import path
 from src.main_frame import MainFrame
 from src.utils import get_pixels_per_cm
 
+try:
+    from ctypes import windll
+
+    myappid = "mycompany.myproduct.subproduct.version"
+    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+
+except ImportError:
+    pass
+
+
 basedir = path.dirname(__file__)
 
 layers = []
