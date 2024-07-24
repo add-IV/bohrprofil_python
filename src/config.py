@@ -42,6 +42,9 @@ class Config:
             + self.get("Abstände und Längen", "Beschreibung Länge")
             + self.get("Abstände und Längen", "Rechts Abstand")
         )
+    
+    def first_distance(self):
+        return self.get("Abstände und Längen", "Erste Ebene Abstand")
 
     def read_file(self, filename):
         self.parser.read(filename, encoding="utf-8")

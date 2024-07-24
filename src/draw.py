@@ -19,9 +19,7 @@ class BohrprofilDrawer:
     def _create_scale(self, max_depth: float):
         for i in range(int(max_depth) + 1):
             text = f"{i}.00 m"
-            y = get_pixels_per_cm(i) + self.config.get(
-                "Abstände und Längen", "Erste Ebene Abstand"
-            )
+            y = get_pixels_per_cm(i) + self.config.first_distance()
             font = self.draw.getfont().font_variant(size=25)
             start_x = self.config.get("Abstände und Längen", "Links Abstand")
             endx = self.config.get(
@@ -72,11 +70,13 @@ class BohrprofilDrawer:
             + self.config.get("Abstände und Längen", "Schichtentiefe Länge")
         )
         end_x = start_x + self.config.get("Abstände und Längen", "Symbole Länge")
-        first_distance = self.config.get(
-                "Abstände und Längen", "Erste Ebene Abstand"
-            )
         self.draw.rectangle(
-            (start_x, first_distance, end_x, get_pixels_per_cm(max_depth) + first_distance),
+            (
+                start_x,
+                self.config.first_distance(),
+                end_x,
+                get_pixels_per_cm(max_depth) + self.config.first_distance(),
+            ),
             outline="black",
             width=1,
         )
