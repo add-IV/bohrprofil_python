@@ -6,20 +6,25 @@ from PIL import ImageTk
 
 from .layer_list import LayerList
 
-from .draw import draw_profile
+from .draw import BohrprofilDrawer
 from .bohrprofil import Bohrprofil, Layer
 from .utils import get_pixels_per_cm
+from .config_frame import ConfigFrame
+from .config import Config
 
 
 class MainFrame(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.drawer = BohrprofilDrawer()
+        self.config = Config()
+
         self.grid(row=0, column=0, sticky=(N, W, E, S), padx=8, pady=4)
 
         self.info_frame = ttk.Frame(self)
         self.info_frame.grid(row=0, column=0, sticky=(N, W))
 
-        self.title_label = ttk.Label(self.info_frame, text="Title:")
+        self.title_label = ttk.Label(self.info_frame, text="Titel:")
         self.title_label.grid(row=0, column=0, sticky=(N, W))
 
         self.title_name = StringVar()
@@ -39,17 +44,17 @@ class MainFrame(ttk.Frame):
         self.layer_manipulation_frame.grid(row=1, column=0, sticky=(N, W))
 
         self.add_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Add Layer"
+            self.layer_manipulation_frame, text="Schicht hinzufügen"
         )
         self.add_layer_button.grid(row=0, column=0, sticky=(N, W))
 
         self.remove_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Remove Layer"
+            self.layer_manipulation_frame, text="Schicht entfernen"
         )
         self.remove_layer_button.grid(row=0, column=1, sticky=(N, W))
 
         self.sort_layers_button = ttk.Button(
-            self.layer_manipulation_frame, text="Sort Layers"
+            self.layer_manipulation_frame, text="Schichten sortieren"
         )
         self.sort_layers_button.grid(row=0, column=2, sticky=(N, W))
 
@@ -73,7 +78,7 @@ class MainFrame(ttk.Frame):
         self.scrollbar.grid(row=0, column=2, sticky=(N, S))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
 
-        self.save_button = ttk.Button(self, text="Save")
+        self.save_button = ttk.Button(self, text="Speichern")
         self.save_button.grid(row=3, column=2, sticky=(N, E))
 
         self.rowconfigure(2, weight=1)
@@ -87,6 +92,7 @@ class MainFrame(ttk.Frame):
         self.height_entry.bind("<KeyRelease>", self.update)
 
         self.after(100, self.update)
+        self.after(100, self.open_config_toplevel)
 
     def update(self, event=None):
         layers = []
@@ -98,24 +104,31 @@ class MainFrame(ttk.Frame):
                     layer.description_text.get(1.0, END),
                 )
             )
-        self.bohrprofil = Bohrprofil(self.title_name.get(), self.height_name.get(), 100, layers)
+        self.bohrprofil = Bohrprofil(
+            self.title_name.get(), self.height_name.get(), 100, layers
+        )
         self.bohrprofil.sort_layers()
         self.bohrprofil.update_max_depth()
         self.canvas.delete("all")
         self.canvas.config(
-            width=get_pixels_per_cm(7),
+            width=self.config.get_width(),
             height=self.canvas_frame.winfo_height(),
             background="white",
             scrollregion=(
                 0,
                 0,
-                int(get_pixels_per_cm(7)),
-                int(get_pixels_per_cm(self.bohrprofil.max_depth + 2)),
+                self.config.get_width(),
+                int(get_pixels_per_cm(self.bohrprofil.max_depth))
+                + self.config.get_extra_height(),
             ),
         )
-        self.image = draw_profile(self.bohrprofil)
+        self.image = self.drawer.draw_profile(self.bohrprofil, self.config)
         self.photo = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, anchor=NW, image=self.photo)
+
+    def update_config(self):
+        self.config = self.config_frame.config
+        self.update()
 
     def save(self):
         filename = asksaveasfilename(
@@ -124,3 +137,16 @@ class MainFrame(ttk.Frame):
         )
         if filename:
             self.image.save(filename)
+
+    def open_config_toplevel(self):
+        self.config_toplevel = Toplevel(self)
+        self.config_toplevel.title("Config")
+        self.config_toplevel.minsize(200, 600)
+        self.config_toplevel.resizable(False, False)
+        self.config_toplevel.columnconfigure(0, weight=1)
+        self.config_toplevel.rowconfigure(0, weight=1)
+        self.config_frame = ConfigFrame(
+            self.config_toplevel, self.config, self.update_config
+        )
+        self.config_toplevel.transient(self)
+        self.config_toplevel.wait_window(self.config_toplevel)
