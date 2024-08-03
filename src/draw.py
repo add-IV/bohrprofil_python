@@ -1,141 +1,218 @@
 from tkinter import *
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw, ImageFont
 from os import path
 
+from PIL import Image, ImageTk
+
 from .bohrprofil import Bohrprofil, Layer
+from .config import Config
 
 from .utils import get_pixels_per_cm
 
 
-basedir = path.dirname(__file__)
-
-images = []
-
-
-def _create_scale(c: Canvas, max_depth: float):
-    for i in range(int(max_depth) + 1):
-        text = f"{i}.00 m"
-        y = get_pixels_per_cm(i + 1)
-        c.create_text(240, y, text=text, anchor="se", font=("TkDefaultFont ", 25))
-        c.create_line(80, y, 240, y, fill="black", width=3)
+def _get_bounds_xy(draw: ImageDraw, font: ImageFont, text: str) -> tuple[int, int]:
+    bbox = draw.multiline_textbbox((0, 0), text, font=font)
+    return bbox[2] + bbox[0], bbox[3] + bbox[1]
 
 
-def _custom_resize(img: Image, height: int) -> Image:
-    # repeats the image until the height is reached
-    img_height = img.height
-    img_width = img.width
-    new_img = Image.new("RGB", (img_width, height))
-    for y in range(0, height, img_height):
-        new_img.paste(img, (0, y))
-    return new_img
+class BohrprofilDrawer:
+    basedir = path.dirname(__file__)
 
+    def _create_scale(self, max_depth: float):
+        for i in range(int(max_depth) + 1):
+            text = f"{i}.00 m"
+            y = get_pixels_per_cm(i) + self.config.y1()
+            size = self.config.get("Schriften", "Maßstab Schriftgröße")
+            font = self.draw.getfont().font_variant(size=size)
+            start_x = self.config.x1()
+            endx = self.config.x2()
+            boundsxy = _get_bounds_xy(self.draw, font, text)
+            self.draw.text(
+                (
+                    endx
+                    - boundsxy[0]
+                    + self.config.get("Schriften Abstände", "Maßstab X Abstand"),
+                    y
+                    - boundsxy[1]
+                    + self.config.get("Schriften Abstände", "Maßstab Y Abstand"),
+                ),
+                text,
+                fill=self.font_color,
+                font=font,
+            )
+            width = self.config.get("Linien", "Maßstab Linienstärke")
+            self.draw.line((start_x, y, endx, y), fill=self.line_color, width=width)
 
-def _draw_textures(c: Canvas, layers: list[Layer]):
-    start_y = get_pixels_per_cm(1)
-    global images
-    images = []
-    for layer in layers:
-        y = get_pixels_per_cm(layer.end_depth + 1)
-        texture = layer.texture
-        img = Image.open(path.join(basedir, "..", "patterns", f"{texture}.png"))
-        aspect_ratio = img.width / img.height
-        img = img.resize((64, int(64 / aspect_ratio)))
-        img = _custom_resize(img, int(y - start_y) + 1)
-        img = ImageTk.PhotoImage(img)
-        images.append(img)
-        c.create_image(400, start_y, image=img, anchor="nw")
-        start_y = y
+    def _custom_resize(self, img: Image, height: int) -> Image:
+        # repeats the image until the height is reached
+        img_height = img.height
+        img_width = img.width
+        new_img = Image.new("RGB", (img_width, height))
+        for y in range(0, height, img_height):
+            new_img.paste(img, (0, y))
+        return new_img
 
+    def _draw_textures(self, layers: list[Layer]):
+        start_y = self.config.y1()
+        image_width = self.config.get("Abstände und Längen", "Symbole Länge")
+        start_x = self.config.x4()
+        for layer in layers:
+            y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
+            texture = layer.texture
+            img = Image.open(
+                path.join(self.basedir, "..", "patterns", f"{texture}.png")
+            )
+            aspect_ratio = img.width / img.height
+            img = img.resize((image_width, int(image_width / aspect_ratio)))
+            img = self._custom_resize(img, int(y - start_y) + 1)
+            self.image.paste(img, (start_x, int(start_y)))
+            start_y = y
 
-def _create_horizontal_lines(c: Canvas, max_depth: float):
-    c.create_line(
-        400, get_pixels_per_cm(1), 400, get_pixels_per_cm(max_depth + 1), fill="black"
-    )
-    c.create_line(
-        464, get_pixels_per_cm(1), 464, get_pixels_per_cm(max_depth + 1), fill="black"
-    )
-
-
-def _create_switch_lines(
-    c: Canvas, layers: list[Layer], description_lines: list[float]
-):
-    c.create_line(320, get_pixels_per_cm(1), 740, get_pixels_per_cm(1), fill="black")
-    for i in range(len(layers)):
-        c.create_text(
-            320,
-            get_pixels_per_cm(layers[i].end_depth + 1),
-            text=f"{(layers[i].end_depth):.2f} m",
-            anchor="sw",
-            font=("TkDefaultFont ", 15),
-        )
-        c.create_line(
-            320,
-            get_pixels_per_cm(layers[i].end_depth + 1),
-            500,
-            get_pixels_per_cm(layers[i].end_depth + 1),
-            fill="black",
-        )
-        c.create_line(
-            500,
-            get_pixels_per_cm(layers[i].end_depth + 1),
-            540,
-            description_lines[i],
-            fill="black",
-        )
-        c.create_line(
-            540, description_lines[i], 740, description_lines[i], fill="black"
+    def _create_horizontal_lines(self, max_depth: float):
+        start_x = self.config.x4()
+        end_x = self.config.x5()
+        self.draw.rectangle(
+            (
+                start_x,
+                self.config.y1(),
+                end_x,
+                get_pixels_per_cm(max_depth) + self.config.y1(),
+            ),
+            outline=self.line_color,
+            width=self.config.get("Linien", "Profil Linienstärke"),
         )
 
-
-def _create_descriptions(c: Canvas, layers: list[Layer]):
-    description_lines = []
-    current_y = get_pixels_per_cm(1)
-    for i in range(len(layers)):
-        description = layers[i].description
-        created_text = c.create_text(
-            550,
-            current_y + 10,
-            text=description,
-            anchor="nw",
-            font=("TkDefaultFont ", 15),
-            width=200 - 5,
+    def _create_switch_lines(self, layers: list[Layer], description_lines: list[float]):
+        self.draw.line(
+            (self.config.x3(), self.config.y1(), self.config.x7(), self.config.y1()),
+            fill=self.line_color,
+            width=self.config.get("Linien", "Profil Linienstärke"),
         )
-        bounds_bottom = c.bbox(created_text)[3]
-        current_y = bounds_bottom - 10
-        if current_y < get_pixels_per_cm(layers[i].end_depth + 1):
-            current_y = get_pixels_per_cm(layers[i].end_depth + 1)
-        description_lines.append(current_y)
-    return description_lines
+        size = self.config.get("Schriften", "Schichtentiefe Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
+        for i in range(len(layers)):
+            text = f"{(layers[i].end_depth):.2f} m"
+            boundsxy = _get_bounds_xy(self.draw, font, text)
+            self.draw.text(
+                (
+                    self.config.x3()
+                    + self.config.get("Schriften Abstände", "Schichtentiefe X Abstand"),
+                    get_pixels_per_cm(layers[i].end_depth)
+                    + self.config.y1()
+                    - boundsxy[1]
+                    + self.config.get("Schriften Abstände", "Schichtentiefe Y Abstand"),
+                ),
+                text,
+                font=font,
+                fill=self.font_color,
+            )
+            self.draw.line(
+                [
+                    self.config.x3(),
+                    get_pixels_per_cm(layers[i].end_depth) + self.config.y1(),
+                    self.config.x5(),
+                    get_pixels_per_cm(layers[i].end_depth) + self.config.y1(),
+                    self.config.x6(),
+                    description_lines[i],
+                    self.config.x7(),
+                    description_lines[i],
+                ],
+                fill=self.line_color,
+                width=self.config.get("Linien", "Profil Linienstärke"),
+            )
+
+    def _create_title(self, title: str):
+        font = self.draw.getfont().font_variant(size=35)
+        boundsxy = _get_bounds_xy(self.draw, font, title)
+        self.draw.text(
+            (
+                self.config.get_width() // 2
+                - boundsxy[0] // 2
+                + self.config.get("Schriften Abstände", "Titel Offset"),
+                self.config.get("Schriften Abstände", "Titel Abstand"),
+            ),
+            title,
+            fill=self.font_color,
+            font=font,
+        )
+
+    def _create_descriptions(self, layers: list[Layer]) -> list[float]:
+        description_lines = []
+        size = self.config.get("Schriften", "Beschreibung Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
+        current_y = get_pixels_per_cm(1)
+        y_border = self.config.get("Schriften Abstände", "Beschreibung Y Abstand")
+        for layer in layers:
+            current_y += y_border
+            boundsxy = _get_bounds_xy(self.draw, font, layer.description)
+            self.draw.text(
+                (
+                    self.config.x6()
+                    + self.config.get("Schriften Abstände", "Beschreibung X Abstand"),
+                    current_y,
+                ),
+                layer.description,
+                fill=self.font_color,
+                font=font,
+            )
+            current_y += boundsxy[1] + y_border
+            if current_y < get_pixels_per_cm(layer.end_depth) + self.config.y1():
+                current_y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
+            description_lines.append(current_y)
+        return description_lines
+
+    def _create_height(self, height: float):
+        size = self.config.get("Schriften", "Meereshöhe Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
+        text = f"Meereshöhe: {height} m"
+        boundsxy = _get_bounds_xy(self.draw, font, text)
+        self.draw.text(
+            (
+                self.config.x3()
+                + self.config.get("Schriften Abstände", "Meereshöhe X Abstand"),
+                self.config.y1()
+                - boundsxy[1]
+                + self.config.get("Schriften Abstände", "Meereshöhe Y Abstand"),
+            ),
+            text,
+            fill=self.font_color,
+            font=font,
+        )
+
+    def _new_image(self, width: int, height: int):
+        self.image = Image.new(
+            "RGB",
+            (width, height),
+            color=self.background_color,
+        )
+        self.draw = ImageDraw.Draw(self.image)
+        self.draw.font = ImageFont.truetype(
+            path.join(self.basedir, "..", "DejaVuSans.ttf"),
+            self.config.get("Schriften", "Schriftgröße"),
+        )
+
+    def draw_profile(self, bp: Bohrprofil, config: Config) -> Image:
+        self.config = config
+        self.background_color = config.get_section("Farben")["Hintergrundfarbe"]
+        self.line_color = config.get_section("Farben")["Linienfarbe"]
+        self.font_color = config.get_section("Farben")["Schriftfarbe"]
+        self._new_image(
+            config.get_width(),
+            int(get_pixels_per_cm(bp.max_depth) + config.get_extra_height()),
+        )
+        self._create_scale(bp.max_depth)
+        self._draw_textures(bp.layers)
+        self._create_horizontal_lines(bp.max_depth)
+        self._create_title(bp.title)
+        description_lines = self._create_descriptions(bp.layers)
+        self._create_switch_lines(bp.layers, description_lines)
+        self._create_height(bp.height)
+        return self.image
 
 
-def _create_title(c: Canvas, title: str):
-    c.create_text(
-        get_pixels_per_cm(3.5), 20, text=title, anchor="n", font=("TkDefaultFont ", 35)
-    )
-
-
-def _create_height(c: Canvas, height: float):
-    c.create_text(
-        320,
-        get_pixels_per_cm(1),
-        text=f"Meereshöhe {height} m NN",
-        anchor="sw",
-        font=("TkDefaultFont ", 12),
-    )
-
-
-def draw_profile(c: Canvas, bp: Bohrprofil, max_height: int = 800):
-    c.delete("all")
-    c.config(
-        width=get_pixels_per_cm(7),
-        height=max_height,
-        background="white",
-        scrollregion=(0, 0, get_pixels_per_cm(7), get_pixels_per_cm(bp.max_depth + 3)),
-    )
-    _create_scale(c, bp.max_depth)
-    _draw_textures(c, bp.layers)
-    _create_horizontal_lines(c, bp.max_depth)
-    _create_title(c, bp.title)
-    description_lines = _create_descriptions(c, bp.layers)
-    _create_switch_lines(c, bp.layers, description_lines)
-    _create_height(c, bp.height)
+if __name__ == "__main__":
+    with open("bohrprofil.txt", "r") as file:
+        bp = Bohrprofil.unmarshal(eval(file.read()))
+    drawer = BohrprofilDrawer()
+    img = drawer.draw_profile(bp)
+    img.save("bohrprofil.png")

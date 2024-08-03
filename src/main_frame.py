@@ -1,26 +1,30 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter.filedialog import asksaveasfilename
 
-from PIL import Image
-
-from io import BytesIO
+from PIL import ImageTk
 
 from .layer_list import LayerList
 
-from .draw import draw_profile
+from .draw import BohrprofilDrawer
 from .bohrprofil import Bohrprofil, Layer
 from .utils import get_pixels_per_cm
+from .config_frame import ConfigFrame
+from .config import Config
 
 
 class MainFrame(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.drawer = BohrprofilDrawer()
+        self.config = Config()
+
         self.grid(row=0, column=0, sticky=(N, W, E, S), padx=8, pady=4)
 
         self.info_frame = ttk.Frame(self)
         self.info_frame.grid(row=0, column=0, sticky=(N, W))
 
-        self.title_label = ttk.Label(self.info_frame, text="Title:")
+        self.title_label = ttk.Label(self.info_frame, text="Titel:")
         self.title_label.grid(row=0, column=0, sticky=(N, W))
 
         self.title_name = StringVar()
@@ -36,23 +40,15 @@ class MainFrame(ttk.Frame):
         self.height_entry.grid(row=1, column=1, sticky=(N, W))
         self.height_name.set("375")
 
-        self.layer_manipulation_frame = ttk.Frame(self)
-        self.layer_manipulation_frame.grid(row=1, column=0, sticky=(N, W))
-
         self.add_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Add Layer"
+            self.info_frame, text="Schicht hinzufügen"
         )
-        self.add_layer_button.grid(row=0, column=0, sticky=(N, W))
+        self.add_layer_button.grid(row=2, column=0, sticky=(N, W))
 
         self.remove_layer_button = ttk.Button(
-            self.layer_manipulation_frame, text="Remove Layer"
+            self.info_frame, text="Schicht entfernen"
         )
-        self.remove_layer_button.grid(row=0, column=1, sticky=(N, W))
-
-        self.sort_layers_button = ttk.Button(
-            self.layer_manipulation_frame, text="Sort Layers"
-        )
-        self.sort_layers_button.grid(row=0, column=2, sticky=(N, W))
+        self.remove_layer_button.grid(row=2, column=1, sticky=(N, W))
 
         self.layer_list = LayerList(self, self.update)
         self.layer_list.grid(row=2, column=0, sticky=(N, W, E, S))
@@ -74,22 +70,26 @@ class MainFrame(ttk.Frame):
         self.scrollbar.grid(row=0, column=2, sticky=(N, S))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
 
-        self.save_button = ttk.Button(self, text="Save")
+        self.options_button = ttk.Button(self, text="Konfigurieren")
+        self.options_button.grid(row=3, column=0, sticky=(N, W))
+        
+        self.save_button = ttk.Button(self, text="Speichern")
         self.save_button.grid(row=3, column=2, sticky=(N, E))
 
         self.rowconfigure(2, weight=1)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
         self.add_layer_button["command"] = self.layer_list.add_one_layer
         self.remove_layer_button["command"] = self.layer_list.remove_one_layer
-        self.sort_layers_button["command"] = self.layer_list.sort_layers
         self.save_button["command"] = self.save
+        self.options_button["command"] = self.open_config_toplevel
         self.title_entry.bind("<KeyRelease>", self.update)
         self.height_entry.bind("<KeyRelease>", self.update)
 
         self.after(100, self.update)
 
     def update(self, event=None):
+        self.layer_list.sort_layers()
         layers = []
         for layer in self.layer_list.layers:
             layers.append(
@@ -99,13 +99,56 @@ class MainFrame(ttk.Frame):
                     layer.description_text.get(1.0, END),
                 )
             )
-        bohrprofil = Bohrprofil(self.title_name.get(), self.height_name.get(), 100, layers)
-        bohrprofil.sort_layers()
-        bohrprofil.update_max_depth()
-        draw_profile(self.canvas, bohrprofil, self.canvas_frame.winfo_height())
+        self.bohrprofil = Bohrprofil(
+            self.title_name.get(), self.height_name.get(), 100, layers
+        )
+        self.bohrprofil.sort_layers()
+        self.bohrprofil.update_max_depth()
+        self.canvas.delete("all")
+        height = (
+            int(get_pixels_per_cm(self.bohrprofil.max_depth))
+            + self.config.get_extra_height()
+        )
+        self.canvas.config(
+            width=self.config.get_width(),
+            height=min(self.canvas_frame.winfo_height(), height),
+            background="white",
+            scrollregion=(
+                0,
+                0,
+                self.config.get_width(),
+                height,
+            ),
+        )
+        self.image = self.drawer.draw_profile(self.bohrprofil, self.config)
+        self.photo = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, anchor=NW, image=self.photo)
+
+    def update_config(self):
+        self.config = self.config_frame.config
+        self.update()
 
     def save(self):
-        ps = self.canvas.postscript(colormode="color")
-        img = Image.open(BytesIO(ps.encode("ascii")))
-        img.load(scale=300/72.)
-        img.save("bohrprofil.png")
+        filename = asksaveasfilename(
+            defaultextension=".png",
+            filetypes=[("PNG files", "*.png"), ("All files", "*")],
+        )
+        if filename:
+            self.image.save(filename)
+
+    def open_config_toplevel(self):
+        self.config_toplevel = Toplevel(self)
+        self.config_toplevel.title("Config")
+        self.config_toplevel.minsize(200, 600)
+        self.config_toplevel.resizable(False, False)
+        self.config_toplevel.columnconfigure(0, weight=1)
+        self.config_toplevel.rowconfigure(0, weight=1)
+        self.config_frame = ConfigFrame(
+            self.config_toplevel, self.config, self.update_config, self.reset_config
+        )
+        self.config_toplevel.transient(self)
+        self.config_toplevel.wait_window(self.config_toplevel)
+
+    def reset_config(self):
+        self.config_toplevel.destroy()
+        self.open_config_toplevel()
