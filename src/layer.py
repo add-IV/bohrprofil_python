@@ -3,6 +3,7 @@ from tkinter import ttk
 
 from src.utils import get_textures
 
+# style = ttk.Style().configure("TCombobox", width=20)
 
 class Layer:
     def __init__(self, master, rownumber, change_callback=None):
@@ -17,7 +18,7 @@ class Layer:
         self.end_depth_entry.bind("<KeyRelease>", change_callback)
 
         self.texture = StringVar()
-        self.texture_combobox = ttk.Combobox(master, textvariable=self.texture)
+        self.texture_combobox = ttk.Combobox(master, state="readonly", textvariable=self.texture)
         self.texture_combobox.grid(row=rownumber, column=1, sticky=(N, W))
         self.texture_combobox.bind("<<ComboboxSelected>>", change_callback)
         self.combobox_set_textures()

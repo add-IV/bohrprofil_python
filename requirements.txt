@@ -6,6 +6,8 @@
 #
 altgraph==0.17.4
     # via pyinstaller
+chardet==5.2.0
+    # via reportlab
 customtkinter==5.2.2
     # via -r requirements.in
 darkdetect==0.8.0
@@ -18,13 +20,19 @@ packaging==24.0
 pefile==2023.2.7
     # via pyinstaller
 pillow==10.3.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   reportlab
 pyinstaller==6.7.0
     # via -r requirements.in
 pyinstaller-hooks-contrib==2024.6
     # via pyinstaller
+pywin32==306
+    # via -r requirements.in
 pywin32-ctypes==0.2.2
     # via pyinstaller
+reportlab==4.2.2
+    # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

@@ -21,8 +21,8 @@ layers = []
 
 root = Tk()
 root.title("Bohrprofil")
-root.minsize(1400, 800)
-root.geometry("1400x800")
+root.minsize(1600, 800)
+root.geometry("1600x800")
 
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)

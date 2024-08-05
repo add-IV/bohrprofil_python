@@ -84,11 +84,11 @@ class Config:
             Letzte Ebene Abstand = 1cm
             Links Abstand = 60
             Maßstab Länge = 160
-            Mitte Abstand = 60
-            Schichtentiefe Länge = 100
+            Mitte Abstand = 140
+            Schichtentiefe Länge = 20
             Symbole Länge = 104
             Beschreibung Abstand = 40
-            Beschreibung Länge = 200
+            Beschreibung Länge = 400
             Rechts Abstand = 60
 
             [Farben]
@@ -98,20 +98,19 @@ class Config:
 
             [Schriften]
             Schriftart = DejaVuSans.ttf
-            Schriftgröße = 15
-            Maßstab Schriftgröße = 25
-            Schichtentiefe Schriftgröße = 15
-            Titel Schriftgröße = 35
-            Beschreibung Schriftgröße = 15
-            Meereshöhe Schriftgröße = 12
+            Maßstab Schriftgröße = 35
+            Schichtentiefe Schriftgröße = 16
+            Titel Schriftgröße = 40
+            Beschreibung Schriftgröße = 25
+            Meereshöhe Schriftgröße = 25
 
             [Schriften Abstände]
             Titel Offset = 0
             Titel Abstand = 10
             Maßstab X Abstand = -5
             Maßstab Y Abstand = 0
-            Schichtentiefe X Abstand = 5
-            Schichtentiefe Y Abstand = 0
+            Schichtentiefe X Abstand = -75
+            Schichtentiefe Y Abstand = 6
             Beschreibung X Abstand = 0
             Beschreibung Y Abstand = 5
             Meereshöhe X Abstand = 5

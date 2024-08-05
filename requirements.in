@@ -1,3 +1,5 @@
 customtkinter
 pillow
 pyinstaller
+pywin32
+reportlab

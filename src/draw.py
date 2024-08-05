@@ -47,7 +47,7 @@ class BohrprofilDrawer:
         # repeats the image until the height is reached
         img_height = img.height
         img_width = img.width
-        new_img = Image.new("RGB", (img_width, height))
+        new_img = Image.new("1", (img_width, height))
         for y in range(0, height, img_height):
             new_img.paste(img, (0, y))
         return new_img
@@ -122,7 +122,8 @@ class BohrprofilDrawer:
             )
 
     def _create_title(self, title: str):
-        font = self.draw.getfont().font_variant(size=35)
+        size = self.config.get("Schriften", "Titel Schriftgröße")
+        font = self.draw.getfont().font_variant(size=size)
         boundsxy = _get_bounds_xy(self.draw, font, title)
         self.draw.text(
             (
@@ -164,7 +165,7 @@ class BohrprofilDrawer:
     def _create_height(self, height: float):
         size = self.config.get("Schriften", "Meereshöhe Schriftgröße")
         font = self.draw.getfont().font_variant(size=size)
-        text = f"Meereshöhe: {height} m"
+        text = f"Meereshöhe: {height} m NN"
         boundsxy = _get_bounds_xy(self.draw, font, text)
         self.draw.text(
             (

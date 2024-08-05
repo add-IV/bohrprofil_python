@@ -2,7 +2,14 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfilename
 
-from PIL import ImageTk
+from PIL import ImageTk, Image
+
+import io
+
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
 
 from .layer_list import LayerList
 
@@ -130,11 +137,32 @@ class MainFrame(ttk.Frame):
 
     def save(self):
         filename = asksaveasfilename(
-            defaultextension=".png",
-            filetypes=[("PNG files", "*.png"), ("All files", "*")],
+            defaultextension=".pdf",
+            filetypes=[("Pdf files", "*.pdf"), ("PNG files", "*.png"), ("All files", "*")],
         )
-        if filename:
+        if not filename.endswith(".pdf"):
             self.image.save(filename)
+        else:
+            image_data = io.BytesIO()
+            self.image.save(image_data, format="png")
+            image_data.seek(0)
+
+            # create a A4 pdf with reportlab
+
+            image_height = self.image.height
+            image_width = self.image.width
+            scale = 300.0
+            image_height = image_height * 72 / 300
+            image_width = image_width * 72 / 300
+
+            c = canvas.Canvas(filename, pagesize=A4)
+            image_out = ImageReader(image_data)
+            c.drawImage(image_out, 0, 0, width=image_width, height=image_height)
+            c.showPage()
+            c.save()
+
+
+
 
     def open_config_toplevel(self):
         self.config_toplevel = Toplevel(self)
