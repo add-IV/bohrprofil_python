@@ -6,6 +6,8 @@ class Layer:
     texture: str
     description: str
 
+import json
+
 @dataclass
 class Bohrprofil:
     title: str
@@ -19,7 +21,6 @@ class Bohrprofil:
     def update_max_depth(self):
         self.max_depth = self.layers[-1].end_depth
 
-    @staticmethod
     def marshal(self):
         return {
             "title": self.title,
@@ -35,7 +36,6 @@ class Bohrprofil:
             ],
         }
     
-    @staticmethod
     def unmarshal(data):
         return Bohrprofil(
             data["title"],
@@ -50,3 +50,13 @@ class Bohrprofil:
                 for layer in data["layers"]
             ],
         )
+    
+    def save(self, filename):
+        with open(filename, "w") as f:
+            f.write(json.dumps(self.marshal()))
+
+    @staticmethod
+    def load(filename):
+        with open(filename, "r") as f:
+            data = json.loads(f.read())
+        return Bohrprofil.unmarshal(data)

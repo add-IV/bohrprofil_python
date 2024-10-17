@@ -1,1 +1,1 @@
-{'title': 'Test', 'height': '200', 'max_depth': 3.0, 'layers': [{'end_depth': 1.0, 'texture': 'symbol0', 'description': 'sdfgsdfg\nasdf\nasdf\n'}, {'end_depth': 1.2, 'texture': 'symbol8', 'description': 'retzedgfh\n'}, {'end_depth': 3.0, 'texture': 'symbol2', 'description': ' cvbn cvbn dfgh\n'}]}
+{"title": "Bohrprofil", "height": "375", "max_depth": 1.0, "layers": [{"end_depth": 1.0, "texture": "Asphalt", "description": "Beschreibung 1\n"}]}

@@ -68,6 +68,4 @@ class ConfigFrame(ttk.Frame):
         self.update()
 
     def reset(self):
-        self.config.read_default_config()
-        self.update()
         self.reset_frame()

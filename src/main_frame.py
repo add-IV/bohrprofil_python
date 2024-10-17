@@ -1,9 +1,13 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter.filedialog import asksaveasfilename
+from tkinter.filedialog import asksaveasfilename, askopenfilename
+from tkinter import messagebox
 
+import win32api
+import os
 from PIL import ImageTk, Image
 
+import tempfile
 import io
 
 
@@ -15,7 +19,7 @@ from .layer_list import LayerList
 
 from .draw import BohrprofilDrawer
 from .bohrprofil import Bohrprofil, Layer
-from .utils import get_pixels_per_cm
+from .utils import get_pixels_per_cm, open_textures_dir
 from .config_frame import ConfigFrame
 from .config import Config
 
@@ -23,6 +27,7 @@ from .config import Config
 class MainFrame(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.create_menubar(master)
         self.drawer = BohrprofilDrawer()
         self.config = Config()
 
@@ -59,6 +64,7 @@ class MainFrame(ttk.Frame):
 
         self.layer_list = LayerList(self, self.update)
         self.layer_list.grid(row=2, column=0, sticky=(N, W, E, S))
+        self.layer_list.add_one_layer(False)
 
         self.canvas_frame = ttk.Frame(self)
         self.canvas_frame.grid(row=0, column=2, rowspan=3, sticky=(N, W, S))
@@ -77,19 +83,11 @@ class MainFrame(ttk.Frame):
         self.scrollbar.grid(row=0, column=2, sticky=(N, S))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
 
-        self.options_button = ttk.Button(self, text="Konfigurieren")
-        self.options_button.grid(row=3, column=0, sticky=(N, W))
-        
-        self.save_button = ttk.Button(self, text="Speichern")
-        self.save_button.grid(row=3, column=2, sticky=(N, E))
-
         self.rowconfigure(2, weight=1)
         self.columnconfigure(0, weight=1)
 
         self.add_layer_button["command"] = self.layer_list.add_one_layer
         self.remove_layer_button["command"] = self.layer_list.remove_one_layer
-        self.save_button["command"] = self.save
-        self.options_button["command"] = self.open_config_toplevel
         self.title_entry.bind("<KeyRelease>", self.update)
         self.height_entry.bind("<KeyRelease>", self.update)
 
@@ -111,6 +109,7 @@ class MainFrame(ttk.Frame):
         )
         self.bohrprofil.sort_layers()
         self.bohrprofil.update_max_depth()
+        self.layer_list.set_max_depth(self.bohrprofil.max_depth)
         self.canvas.delete("all")
         height = (
             int(get_pixels_per_cm(self.bohrprofil.max_depth))
@@ -135,11 +134,7 @@ class MainFrame(ttk.Frame):
         self.config = self.config_frame.config
         self.update()
 
-    def save(self):
-        filename = asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("Pdf files", "*.pdf"), ("PNG files", "*.png"), ("All files", "*")],
-        )
+    def save(self, filename):
         if not filename.endswith(".pdf"):
             self.image.save(filename)
         else:
@@ -152,19 +147,105 @@ class MainFrame(ttk.Frame):
             image_height = self.image.height
             image_width = self.image.width
             scale = 300.0
-            image_height = image_height * 72 / 300
-            image_width = image_width * 72 / 300
+            image_height = image_height * 72 / scale
+            image_width = image_width * 72 / scale
 
             c = canvas.Canvas(filename, pagesize=A4)
             image_out = ImageReader(image_data)
-            c.drawImage(image_out, 0, 0, width=image_width, height=image_height)
+            c.drawImage(image_out, 40, A4[1] - image_height - 40, width=image_width, height=image_height)
             c.showPage()
             c.save()
 
 
+    def create_menubar(self, root):
+        menubar = Menu(root)
+        filemenu = Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Neu", command=self._new)
+        filemenu.add_command(label="Öffnen", command=self._open)
+        filemenu.add_command(label="Speichern", command=self._save)
+        filemenu.add_separator()
+        filemenu.add_command(label="Exportieren", command=self._export)
+        filemenu.add_command(label="Drucken", command=self._print)
+        filemenu.add_separator()
+        filemenu.add_command(label="Beenden", command=root.quit)
+        optionmenu = Menu(menubar, tearoff=0)
+        optionmenu.add_command(label="Konfigurieren", command=self._config)
+        optionmenu.add_command(label="Öffne Symbolverzeichnis", command=self._open_symbol_dir)
+        menubar.add_cascade(label="Datei", menu=filemenu)
+        menubar.add_cascade(label="Optionen", menu=optionmenu)
+        root.config(menu=menubar)
 
+    def _open_symbol_dir(self):
+        open_textures_dir()
+
+    def _new(self):
+        self.title_name.set("Bohrprofil")
+        self.height_name.set("375")
+        self.layer_list.clear()
+        self.update()
+
+    def _open(self):
+        filename = askopenfilename(
+            filetypes=[("Json files", "*.json"), ("All files", "*")]
+        )
+        if filename == "":
+            return
+        bohrprofil = Bohrprofil.load(filename)
+        self.title_name.set(bohrprofil.title)
+        self.height_name.set(bohrprofil.height)
+        self.layer_list.clear()
+        first_layer_info = bohrprofil.layers[0]
+        self.layer_list.layers[0].set_all(str(first_layer_info.end_depth), first_layer_info.description)
+        self.layer_list.layers[0].texture.set(first_layer_info.texture)
+        for layer in bohrprofil.layers[1:]:
+            self.layer_list.add_one_layer(False)
+            self.layer_list.layers[-1].set_all(str(layer.end_depth), layer.description)
+            self.layer_list.layers[-1].texture.set(layer.texture)
+        self.update()
+
+    def _save(self):
+        filename = asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Json files", "*.json"), ("All files", "*")],
+        )
+        if filename == "":
+            return
+        self.bohrprofil.save(filename)
+
+
+    def _export(self):
+        filename = asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("Pdf files", "*.pdf"), ("PNG files", "*.png"), ("All files", "*")],
+        )
+        if filename == "":
+            return
+        self.save(filename)
+
+    def _print(self):
+        filename = tempfile.mktemp(".pdf")
+        if filename == "":
+            return
+        self.save(filename)
+
+        try:
+            win32api.ShellExecute(0, "print", filename, None, ".", 0)
+        except Exception as e1:
+            try:
+                os.startfile(filename, "print")
+            except Exception as e2:
+                try:
+                    os.startfile(filename)
+                except Exception as e3:
+                    errorinfo = f"win32api:\n{e1}\nos.startfile(print):\n{e2}\nos.startfile:\n{e3}"
+                    messagebox.showerror("Drucken fehlgeschlagen", errorinfo)
+
+    def _config(self):
+        self.open_config_toplevel()
 
     def open_config_toplevel(self):
+        if hasattr(self, "config_toplevel"):
+            self.config_toplevel.destroy()
         self.config_toplevel = Toplevel(self)
         self.config_toplevel.title("Config")
         self.config_toplevel.minsize(200, 600)
@@ -178,5 +259,4 @@ class MainFrame(ttk.Frame):
         self.config_toplevel.wait_window(self.config_toplevel)
 
     def reset_config(self):
-        self.config_toplevel.destroy()
         self.open_config_toplevel()

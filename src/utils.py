@@ -16,8 +16,11 @@ def get_textures():
     for file in glob("*.png", root_dir=path.join(basedir, "..", "patterns")):
         textures.append(path.basename(file)[:-4])
     textures.sort()
-    textures.sort(key=len)
     return textures
+
+def open_textures_dir():
+    import os
+    os.system(f"start {path.join(basedir, '..', 'patterns')}")
 
 if __name__ == "__main__":
     print(get_textures())
