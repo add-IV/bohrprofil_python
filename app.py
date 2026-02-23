@@ -1,18 +1,15 @@
 from tkinter import *
 from tkinter import ttk
 from os import path
+import sys
 from src.main_frame import MainFrame
 from src.utils import get_pixels_per_cm
 
-try:
+if sys.platform == "win32":
     from ctypes import windll
 
-    myappid = "mycompany.myproduct.subproduct.version"
+    myappid = "addiv.bohrprofil.1.0"
     windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-
-
-except ImportError:
-    pass
 
 
 basedir = path.dirname(__file__)
@@ -30,6 +27,7 @@ root.rowconfigure(0, weight=1)
 # Create a main frame
 main_frame = MainFrame(root)
 
-root.iconbitmap(path.join(basedir, "mu.ico"))
+if sys.platform == "win32":
+    root.iconbitmap(path.join(basedir, "mu.ico"))
 
 root.mainloop()

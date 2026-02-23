@@ -3,8 +3,12 @@ from tkinter import ttk
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkinter import messagebox
 
-import win32api
+import sys
 import os
+import subprocess
+
+if sys.platform == "win32":
+    import win32api
 from PIL import ImageTk, Image
 
 import tempfile
@@ -228,17 +232,23 @@ class MainFrame(ttk.Frame):
             return
         self.save(filename)
 
-        try:
-            win32api.ShellExecute(0, "print", filename, None, ".", 0)
-        except Exception as e1:
+        if sys.platform == "win32":
             try:
-                os.startfile(filename, "print")
-            except Exception as e2:
+                win32api.ShellExecute(0, "print", filename, None, ".", 0)
+            except Exception as e1:
                 try:
-                    os.startfile(filename)
-                except Exception as e3:
-                    errorinfo = f"win32api:\n{e1}\nos.startfile(print):\n{e2}\nos.startfile:\n{e3}"
-                    messagebox.showerror("Drucken fehlgeschlagen", errorinfo)
+                    os.startfile(filename, "print")
+                except Exception as e2:
+                    try:
+                        os.startfile(filename)
+                    except Exception as e3:
+                        errorinfo = f"win32api:\n{e1}\nos.startfile(print):\n{e2}\nos.startfile:\n{e3}"
+                        messagebox.showerror("Drucken fehlgeschlagen", errorinfo)
+        elif sys.platform == "linux":
+            try:
+                subprocess.run(["xdg-open", filename], check=True)
+            except Exception as e:
+                messagebox.showerror("Drucken fehlgeschlagen", f"Fehler beim Öffnen der Datei:\n{e}")
 
     def _config(self):
         self.open_config_toplevel()
