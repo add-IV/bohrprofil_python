@@ -7,7 +7,7 @@ from PIL import Image, ImageTk
 from .bohrprofil import Bohrprofil, Layer
 from .config import Config
 
-from .utils import get_pixels_per_cm
+from .utils import get_pixels_per_cm, get_external_dir, get_bundle_dir
 
 
 def _get_bounds_xy(draw: ImageDraw, font: ImageFont, text: str) -> tuple[int, int]:
@@ -16,7 +16,6 @@ def _get_bounds_xy(draw: ImageDraw, font: ImageFont, text: str) -> tuple[int, in
 
 
 class BohrprofilDrawer:
-    basedir = path.dirname(__file__)
 
     def _create_scale(self, max_depth: float):
         for i in range(int(max_depth) + 1):
@@ -60,7 +59,7 @@ class BohrprofilDrawer:
             y = get_pixels_per_cm(layer.end_depth) + self.config.y1()
             texture = layer.texture
             img = Image.open(
-                path.join(self.basedir, "..", "patterns", f"{texture}.png")
+                path.join(get_external_dir(), "patterns", f"{texture}.png")
             )
             aspect_ratio = img.width / img.height
             img = img.resize((image_width, int(image_width / aspect_ratio)))
@@ -188,7 +187,7 @@ class BohrprofilDrawer:
         )
         self.draw = ImageDraw.Draw(self.image)
         self.draw.font = ImageFont.truetype(
-            path.join(self.basedir, "..", "DejaVuSans.ttf"),
+            path.join(get_bundle_dir(), "DejaVuSans.ttf"),
             self.config.get("Schriften", "Schriftgröße"),
         )
 

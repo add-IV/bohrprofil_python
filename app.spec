@@ -1,4 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
+import shutil
+import os
 
 
 a = Analysis(
@@ -7,9 +9,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ("mu.ico", "."),
-        ("patterns", "patterns"),
         ("DejaVuSans.ttf", "."),
-        ("config.ini", "."),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -24,8 +24,10 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
+    exclude_binaries=False,
     name="Bohrprofil",
     debug=False,
     bootloader_ignore_signals=False,
@@ -39,12 +41,6 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="app",
-)
+
+shutil.copytree("patterns", "dist/patterns", dirs_exist_ok=True)
+shutil.copy("config.ini", "dist/config.ini")

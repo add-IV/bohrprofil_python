@@ -3,7 +3,7 @@ from tkinter import ttk
 from os import path
 import sys
 from src.main_frame import MainFrame
-from src.utils import get_pixels_per_cm
+from src.utils import get_bundle_dir
 
 if sys.platform == "win32":
     from ctypes import windll
@@ -11,8 +11,6 @@ if sys.platform == "win32":
     myappid = "addiv.bohrprofil.1.0"
     windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-
-basedir = path.dirname(__file__)
 
 layers = []
 
@@ -28,6 +26,6 @@ root.rowconfigure(0, weight=1)
 main_frame = MainFrame(root)
 
 if sys.platform == "win32":
-    root.iconbitmap(path.join(basedir, "mu.ico"))
+    root.iconbitmap(path.join(get_bundle_dir(), "mu.ico"))
 
 root.mainloop()
