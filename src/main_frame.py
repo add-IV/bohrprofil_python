@@ -23,7 +23,7 @@ from .layer_list import LayerList
 
 from .draw import BohrprofilDrawer
 from .bohrprofil import Bohrprofil, Layer
-from .utils import get_pixels_per_cm, open_textures_dir
+from .utils import get_pixels_per_cm
 from .config_frame import ConfigFrame
 from .config import Config
 
@@ -174,13 +174,9 @@ class MainFrame(ttk.Frame):
         filemenu.add_command(label="Beenden", command=root.quit)
         optionmenu = Menu(menubar, tearoff=0)
         optionmenu.add_command(label="Konfigurieren", command=self._config)
-        optionmenu.add_command(label="Öffne Symbolverzeichnis", command=self._open_symbol_dir)
         menubar.add_cascade(label="Datei", menu=filemenu)
         menubar.add_cascade(label="Optionen", menu=optionmenu)
         root.config(menu=menubar)
-
-    def _open_symbol_dir(self):
-        open_textures_dir()
 
     def _new(self):
         self.title_name.set("Bohrprofil")

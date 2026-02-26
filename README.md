@@ -1,1 +1,3 @@
 [installer](https://www.pythonguis.com/tutorials/packaging-tkinter-applications-windows-pyinstaller/#building-a-basic-app)
+
+pyinstaller app.spec
