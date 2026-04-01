@@ -1,7 +1,9 @@
 from tkinter import *
 from tkinter import ttk
+from os import path
 
-from src.utils import get_textures
+from .utils import get_textures, get_external_dir
+from .texture_hover_preview import TextureHoverPreview
 
 # style = ttk.Style().configure("TCombobox", width=20)
 
@@ -22,6 +24,10 @@ class Layer:
         self.texture_combobox.grid(row=rownumber, column=1, sticky=(N, W))
         self.texture_combobox.bind("<<ComboboxSelected>>", change_callback)
         self.combobox_set_textures()
+        TextureHoverPreview(
+            self.texture_combobox,
+            path.join(get_external_dir(), "patterns"),
+        )
 
         self.description_text = Text(master, width=38, height=4)
         self.description_text.grid(row=rownumber, column=2, sticky=(N, W))

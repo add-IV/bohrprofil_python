@@ -2,8 +2,6 @@ from tkinter import *
 from PIL import Image, ImageDraw, ImageFont
 from os import path
 
-from PIL import Image, ImageTk
-
 from .bohrprofil import Bohrprofil, Layer
 from .config import Config
 
@@ -188,7 +186,7 @@ class BohrprofilDrawer:
         self.draw = ImageDraw.Draw(self.image)
         self.draw.font = ImageFont.truetype(
             path.join(get_bundle_dir(), "DejaVuSans.ttf"),
-            self.config.get("Schriften", "Schriftgröße"),
+            1,
         )
 
     def draw_profile(self, bp: Bohrprofil, config: Config) -> Image:

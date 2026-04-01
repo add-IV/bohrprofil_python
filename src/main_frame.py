@@ -109,7 +109,7 @@ class MainFrame(ttk.Frame):
                 )
             )
         self.bohrprofil = Bohrprofil(
-            self.title_name.get(), self.height_name.get(), 100, layers
+            self.title_name.get(), float(self.height_name.get() or 0), 100, layers
         )
         self.bohrprofil.sort_layers()
         self.bohrprofil.update_max_depth()
@@ -194,11 +194,9 @@ class MainFrame(ttk.Frame):
         self.title_name.set(bohrprofil.title)
         self.height_name.set(bohrprofil.height)
         self.layer_list.clear()
-        first_layer_info = bohrprofil.layers[0]
-        self.layer_list.layers[0].set_all(str(first_layer_info.end_depth), first_layer_info.description)
-        self.layer_list.layers[0].texture.set(first_layer_info.texture)
-        for layer in bohrprofil.layers[1:]:
-            self.layer_list.add_one_layer(False)
+        for i, layer in enumerate(bohrprofil.layers):
+            if i > 0:
+                self.layer_list.add_one_layer(False)
             self.layer_list.layers[-1].set_all(str(layer.end_depth), layer.description)
             self.layer_list.layers[-1].texture.set(layer.texture)
         self.update()
@@ -223,7 +221,7 @@ class MainFrame(ttk.Frame):
         self.save(filename)
 
     def _print(self):
-        filename = tempfile.mktemp(".pdf")
+        filename = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False).name
         if filename == "":
             return
         self.save(filename)

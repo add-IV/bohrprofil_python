@@ -36,6 +36,7 @@ class Bohrprofil:
             ],
         }
     
+    @staticmethod
     def unmarshal(data):
         return Bohrprofil(
             data["title"],

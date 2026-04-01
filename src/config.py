@@ -15,7 +15,7 @@ class Config:
         value = self.parser.get(section, key)
         if value.endswith("cm"):
             return int(get_pixels_per_cm(float(value[:-2])))
-        if value[0] in ("-", "+") and value[1:].isdigit() or value.isdigit():
+        if value and (value[0] in ("-", "+") and value[1:].isdigit() or value.isdigit()):
             return int(value)
         return value
 
